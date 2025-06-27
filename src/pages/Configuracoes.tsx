@@ -7,39 +7,41 @@ import ContractModelsList from '@/components/ContractModelsList';
 
 const Configuracoes = () => {
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
+    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-sm">
+      <div className="p-6 border-b border-gray-200">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
         <p className="text-gray-600">Gerencie as configurações do sistema e modelos de contrato</p>
       </div>
 
-      <Tabs defaultValue="models" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="models" className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Modelos de Contrato</span>
-          </TabsTrigger>
-          <TabsTrigger value="general" className="flex items-center space-x-2">
-            <Settings className="h-4 w-4" />
-            <span>Configurações Gerais</span>
-          </TabsTrigger>
-        </TabsList>
+      <div className="p-6">
+        <Tabs defaultValue="models" className="space-y-6">
+          <TabsList className="bg-gray-100">
+            <TabsTrigger value="models" className="flex items-center space-x-2">
+              <FileText className="h-4 w-4" />
+              <span>Modelos de Contrato</span>
+            </TabsTrigger>
+            <TabsTrigger value="general" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Configurações Gerais</span>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="models">
-          <ContractModelsList />
-        </TabsContent>
+          <TabsContent value="models">
+            <ContractModelsList />
+          </TabsContent>
 
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações Gerais</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Configurações gerais em desenvolvimento...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações Gerais</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">Configurações gerais em desenvolvimento...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
