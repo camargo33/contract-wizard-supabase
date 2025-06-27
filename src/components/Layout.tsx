@@ -12,7 +12,7 @@ const Layout = () => {
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-6 bg-gray-50">
+        <main className="flex-1 p-6 bg-white">
           <Breadcrumbs />
           <Suspense fallback={
             <div className="space-y-6">
