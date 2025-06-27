@@ -64,6 +64,7 @@ export const useUploadProcess = () => {
     });
 
     if (!selectedFile) {
+      console.log('Erro: arquivo não selecionado');
       toast({
         title: "Arquivo obrigatório",
         description: "Selecione um arquivo para análise.",
@@ -73,6 +74,7 @@ export const useUploadProcess = () => {
     }
 
     if (!selectedModel) {
+      console.log('Erro: modelo não selecionado');
       toast({
         title: "Modelo obrigatório",
         description: "Selecione um modelo de contrato para comparação.",
@@ -80,6 +82,8 @@ export const useUploadProcess = () => {
       });
       return;
     }
+
+    console.log('Condições atendidas, iniciando análise...');
 
     try {
       setIsAnalyzing(true);
@@ -139,15 +143,6 @@ export const useUploadProcess = () => {
     }
   };
 
-  // Debug para verificar se o botão deve estar habilitado
-  const canAnalyze = !!(selectedFile && selectedModel && !isAnalyzing);
-  console.log('Estado do botão:', {
-    selectedFile: !!selectedFile,
-    selectedModel: !!selectedModel,
-    isAnalyzing,
-    canAnalyze
-  });
-
   return {
     selectedFile,
     selectedModel,
@@ -160,7 +155,6 @@ export const useUploadProcess = () => {
     detectedErrors,
     handleFileSelect,
     handleAnalyze,
-    handleProceedToValidation,
-    canAnalyze // Exportando para debug
+    handleProceedToValidation
   };
 };

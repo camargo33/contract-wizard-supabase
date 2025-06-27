@@ -12,7 +12,7 @@ interface FileUploadProps {
   onAnalyze: () => void;
   isAnalyzing: boolean;
   progress: number;
-  status: 'waiting' | 'processing' | 'completed' | 'error';
+  status: 'waiting' | 'processing' | 'completed' | 'error' | 'extracted';
   selectedFile?: File | null;
   selectedModel?: string;
 }
@@ -64,11 +64,14 @@ const FileUpload = ({
     onAnalyze();
   };
 
-  // Verificar se pode analisar
-  const canAnalyze = !!(currentFile && selectedModel && !isAnalyzing);
+  // Verificar se pode analisar - simplificado para garantir que funcione
+  const canAnalyze = Boolean(currentFile && selectedModel && !isAnalyzing);
+  
   console.log('FileUpload: Estado do botão', {
-    currentFile: !!currentFile,
-    selectedModel: !!selectedModel,
+    currentFile: Boolean(currentFile),
+    currentFileName: currentFile?.name,
+    selectedModel: Boolean(selectedModel),
+    selectedModelValue: selectedModel,
     isAnalyzing,
     canAnalyze
   });
@@ -102,10 +105,15 @@ const FileUpload = ({
 
       <ProgressIndicator progress={progress} isVisible={isAnalyzing} />
       
-      {/* Debug info - remover em produção */}
+      {/* Debug info - expandido para melhor troubleshooting */}
       {process.env.NODE_ENV === 'development' && (
         <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-          Debug: Arquivo={currentFile?.name || 'nenhum'} | Modelo={selectedModel || 'nenhum'} | Analisando={isAnalyzing ? 'sim' : 'não'} | Pode analisar={canAnalyze ? 'sim' : 'não'}
+          <div>Debug Info:</div>
+          <div>Arquivo: {currentFile?.name || 'nenhum'}</div>
+          <div>Modelo: {selectedModel || 'nenhum'}</div>
+          <div>Analisando: {isAnalyzing ? 'sim' : 'não'}</div>
+          <div>Pode analisar: {canAnalyze ? 'SIM' : 'NÃO'}</div>
+          <div>Status: {status}</div>
         </div>
       )}
     </div>

@@ -10,11 +10,17 @@ interface AnalyzeButtonProps {
 }
 
 const AnalyzeButton = ({ onAnalyze, disabled, isAnalyzing }: AnalyzeButtonProps) => {
+  console.log('AnalyzeButton render:', {
+    disabled,
+    isAnalyzing
+  });
+
   return (
     <Button
       onClick={onAnalyze}
       disabled={disabled}
       className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+      type="button"
     >
       {isAnalyzing ? (
         <>
