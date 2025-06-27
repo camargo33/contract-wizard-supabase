@@ -10,11 +10,11 @@ interface UploadConfigurationProps {
 
 const UploadConfiguration = ({ selectedModel, onModelChange }: UploadConfigurationProps) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configuração da Análise</CardTitle>
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="bg-white">
+        <CardTitle className="text-gray-800">Configuração da Análise</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="bg-white">
         <ContractModelSelector
           value={selectedModel}
           onChange={onModelChange}

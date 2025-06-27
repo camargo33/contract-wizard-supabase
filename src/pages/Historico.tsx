@@ -140,37 +140,37 @@ const Historico = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 fade-in">
-      <Card className="ciabrasnet-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-[var(--primary-blue)]">
+    <div className="max-w-6xl mx-auto space-y-6 fade-in bg-white">
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader className="bg-white">
+          <CardTitle className="flex items-center space-x-2 text-gray-800">
             <FileText className="h-5 w-5" />
             <span>Histórico de Análises</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 bg-white">
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-              <div className="text-2xl font-bold text-[var(--primary-blue)]">
+            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="text-2xl font-bold text-gray-700">
                 {state.analyses.length}
               </div>
               <div className="text-sm text-gray-600">Total de Análises</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-              <div className="text-2xl font-bold text-[var(--success-green)]">
+            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="text-2xl font-bold text-green-600">
                 {state.analyses.filter(a => a.status === 'concluido').length}
               </div>
               <div className="text-sm text-gray-600">Concluídas</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-              <div className="text-2xl font-bold text-[var(--accent-orange)]">
+            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="text-2xl font-bold text-orange-600">
                 {state.analyses.filter(a => a.status === 'processando').length}
               </div>
               <div className="text-sm text-gray-600">Em Processamento</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
-              <div className="text-2xl font-bold text-[var(--error-red)]">
+            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="text-2xl font-bold text-red-600">
                 {state.analyses.filter(a => a.status === 'erro').length}
               </div>
               <div className="text-sm text-gray-600">Com Erro</div>
@@ -201,28 +201,28 @@ const Historico = () => {
               <ErrorState onRetry={() => window.location.reload()} />
             )
           ) : (
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border rounded-lg overflow-hidden bg-white">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead>Arquivo</TableHead>
-                    <TableHead>Data/Hora</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Erros</TableHead>
-                    <TableHead>Tempo</TableHead>
-                    <TableHead>Ações</TableHead>
+                    <TableHead className="text-gray-700">Arquivo</TableHead>
+                    <TableHead className="text-gray-700">Data/Hora</TableHead>
+                    <TableHead className="text-gray-700">Status</TableHead>
+                    <TableHead className="text-gray-700">Erros</TableHead>
+                    <TableHead className="text-gray-700">Tempo</TableHead>
+                    <TableHead className="text-gray-700">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredAnalyses.map((analysis) => (
                     <TableRow 
                       key={analysis.id} 
-                      className="hover:bg-gray-50 transition-colors duration-200"
+                      className="hover:bg-gray-50 transition-colors duration-200 bg-white"
                     >
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-2">
-                          <FileText className="h-4 w-4 text-[var(--primary-blue)]" />
-                          <span className="truncate max-w-[200px]">
+                          <FileText className="h-4 w-4 text-gray-600" />
+                          <span className="truncate max-w-[200px] text-gray-800">
                             {analysis.arquivo_nome}
                           </span>
                         </div>
@@ -267,7 +267,7 @@ const Historico = () => {
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleViewAnalysis(analysis.id)}
-                          className="hover:bg-[var(--primary-light)] hover:text-[var(--primary-blue)]"
+                          className="hover:bg-gray-100 hover:text-gray-800"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
