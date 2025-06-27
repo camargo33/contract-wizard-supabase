@@ -98,7 +98,71 @@ export const useSupabase = () => {
       const { data, error } = await supabase
         .from('contratos_modelo')
         .select('*')
-        .eq('template_ativo', true);
+        .eq('template_ativo', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createContractModel = async (modelData: {
+    name: string;
+    file: File;
+    requiredFields: string[];
+  }) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Upload do arquivo PDF modelo
+      const fileName = `modelo-${Date.now()}-${modelData.file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('contract-pdfs')
+        .upload(fileName, modelData.file);
+
+      if (uploadError) throw uploadError;
+
+      // Criar registro na tabela contratos_modelo
+      const { data: modelRecord, error: modelError } = await supabase
+        .from('contratos_modelo')
+        .insert({
+          nome: modelData.name,
+          template_ativo: true,
+          campos_obrigatorios: modelData.requiredFields,
+          regras_validacao: {}
+        })
+        .select()
+        .single();
+
+      if (modelError) throw modelError;
+
+      return { 
+        model: modelRecord, 
+        filePath: uploadData.path 
+      };
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getAllContractModels = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('contratos_modelo')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
@@ -116,6 +180,8 @@ export const useSupabase = () => {
     uploadFile,
     updateAnalysis,
     getAnalyses,
-    getContractModels
+    getContractModels,
+    createContractModel,
+    getAllContractModels
   };
 };

@@ -15,13 +15,13 @@ type ContractModel = Database['public']['Tables']['contratos_modelo']['Row'];
 const ContractModelsList = () => {
   const [models, setModels] = useState<ContractModel[]>([]);
   const [loading, setLoading] = useState(true);
-  const { getContractModels } = useSupabase();
+  const { getAllContractModels, createContractModel } = useSupabase();
   const { toast } = useToast();
 
   const loadModels = async () => {
     try {
       setLoading(true);
-      const data = await getContractModels();
+      const data = await getAllContractModels();
       setModels(data || []);
     } catch (error: any) {
       toast({
@@ -40,12 +40,12 @@ const ContractModelsList = () => {
 
   const handleCreateModel = async (modelData: any) => {
     try {
-      // Simular criação do modelo
+      await createContractModel(modelData);
       toast({
         title: "Modelo criado",
         description: `Modelo "${modelData.name}" foi criado com sucesso.`,
       });
-      loadModels();
+      loadModels(); // Recarregar a lista
     } catch (error: any) {
       toast({
         title: "Erro ao criar modelo",

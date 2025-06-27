@@ -25,8 +25,10 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
       try {
         setLoading(true);
         const data = await getContractModels();
+        console.log('Modelos carregados:', data); // Debug
         setModels(data || []);
       } catch (error: any) {
+        console.error('Erro ao carregar modelos:', error); // Debug
         toast({
           title: "Erro ao carregar modelos",
           description: error.message,
@@ -38,6 +40,24 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
     };
 
     loadModels();
+  }, []);
+
+  // Recarregar modelos quando o componente recebe foco
+  useEffect(() => {
+    const handleFocus = () => {
+      const loadModels = async () => {
+        try {
+          const data = await getContractModels();
+          setModels(data || []);
+        } catch (error) {
+          console.error('Erro ao recarregar modelos:', error);
+        }
+      };
+      loadModels();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   return (
