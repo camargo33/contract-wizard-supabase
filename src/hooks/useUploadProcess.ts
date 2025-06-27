@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useToast } from '@/hooks/use-toast';
 import { ocrService } from '@/services/ocrService';
+import { ValidationEngine } from '@/services/validationEngine';
 
 type AnalysisStatus = 'waiting' | 'processing' | 'extracted' | 'completed' | 'error';
 
@@ -19,6 +19,17 @@ interface PageData {
   extractedFields: any[];
 }
 
+interface DetectedError {
+  id: string;
+  tipo_erro: string;
+  campo_afetado: string;
+  valor_encontrado?: string;
+  valor_esperado?: string;
+  sugestao_correcao?: string;
+  severidade: string;
+  confianca: number;
+}
+
 export const useUploadProcess = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>('');
@@ -28,8 +39,9 @@ export const useUploadProcess = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
   const [extractedPages, setExtractedPages] = useState<PageData[]>([]);
+  const [detectedErrors, setDetectedErrors] = useState<DetectedError[]>([]);
   
-  const { uploadFile, updateAnalysis, saveExtractedFields } = useSupabase();
+  const { uploadFile, updateAnalysis, saveExtractedFields, saveDetectedErrors, getContractModels } = useSupabase();
   const { toast } = useToast();
 
   const handleFileSelect = (file: File) => {
@@ -80,6 +92,81 @@ export const useUploadProcess = () => {
       });
       toast({
         title: "Erro na extração",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const performValidation = async (analysisId: string, extractedPages: PageData[]) => {
+    try {
+      console.log('Iniciando validação...');
+      setStatus('processing');
+      setProgress(0);
+
+      // Obter modelo de contrato selecionado
+      const models = await getContractModels();
+      const selectedModelData = models?.find(m => m.id === selectedModel);
+      
+      if (!selectedModelData) {
+        throw new Error('Modelo de contrato não encontrado');
+      }
+
+      // Combinar todos os campos extraídos
+      const allFields = extractedPages.flatMap(page => page.extractedFields);
+      
+      // Executar validação
+      const validationEngine = new ValidationEngine();
+      const errors = validationEngine.validateExtractedData(allFields, selectedModelData);
+
+      setProgress(50);
+
+      // Salvar erros detectados
+      if (errors.length > 0) {
+        await saveDetectedErrors(analysisId, errors);
+      }
+
+      setProgress(80);
+
+      // Atualizar análise
+      await updateAnalysis(analysisId, {
+        status: errors.length > 0 ? 'erro' : 'concluido',
+        total_erros: errors.length,
+        tempo_processamento: 3
+      });
+
+      setProgress(100);
+
+      // Preparar resultado da análise
+      const result: AnalysisResult = {
+        totalErrors: errors.length,
+        missingFields: errors
+          .filter(e => e.tipo_erro === 'campo_obrigatorio')
+          .map(e => e.campo_afetado),
+        validationErrors: errors
+          .filter(e => e.tipo_erro !== 'campo_obrigatorio')
+          .map(e => `${e.campo_afetado}: ${e.sugestao_correcao}`),
+        processingTime: 3,
+      };
+
+      setAnalysisResult(result);
+      setDetectedErrors(errors);
+      setStatus(errors.length > 0 ? 'error' : 'completed');
+      
+      toast({
+        title: "Validação concluída",
+        description: `${errors.length} erros encontrados`,
+        variant: errors.length > 0 ? "destructive" : "default",
+      });
+
+    } catch (error: any) {
+      console.error('Erro na validação:', error);
+      setStatus('error');
+      await updateAnalysis(analysisId, {
+        status: 'erro'
+      });
+      toast({
+        title: "Erro na validação",
         description: error.message,
         variant: "destructive",
       });
@@ -178,18 +265,22 @@ export const useUploadProcess = () => {
     if (!currentAnalysisId) return;
     
     try {
+      setIsAnalyzing(true);
+      
       toast({
         title: "Iniciando validação",
         description: "Comparando com o modelo selecionado...",
       });
 
-      await simulateValidation(currentAnalysisId);
+      await performValidation(currentAnalysisId, extractedPages);
     } catch (error: any) {
       toast({
         title: "Erro na validação",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -202,6 +293,7 @@ export const useUploadProcess = () => {
     status,
     analysisResult,
     extractedPages,
+    detectedErrors,
     handleFileSelect,
     handleAnalyze,
     handleProceedToValidation

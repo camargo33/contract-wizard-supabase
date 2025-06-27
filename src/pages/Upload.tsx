@@ -3,7 +3,7 @@ import React from 'react';
 import FileUpload from '@/components/FileUpload';
 import UploadConfiguration from '@/components/UploadConfiguration';
 import ExtractedFieldsDisplay from '@/components/ExtractedFieldsDisplay';
-import ValidationResults from '@/components/ValidationResults';
+import DetailedValidationResults from '@/components/DetailedValidationResults';
 import { useUploadProcess } from '@/hooks/useUploadProcess';
 
 const Upload = () => {
@@ -15,10 +15,20 @@ const Upload = () => {
     status,
     analysisResult,
     extractedPages,
+    detectedErrors,
     handleFileSelect,
     handleAnalyze,
     handleProceedToValidation
   } = useUploadProcess();
+
+  const handleNewAnalysis = () => {
+    window.location.reload(); // Simples reset para nova análise
+  };
+
+  const handleGenerateReport = () => {
+    // TODO: Implementar geração de relatório
+    console.log('Gerando relatório...', { analysisResult, detectedErrors });
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -27,7 +37,7 @@ const Upload = () => {
         <p className="text-gray-600">Faça upload de um contrato e selecione um modelo para análise automática</p>
       </div>
 
-      {status !== 'extracted' && status !== 'completed' && (
+      {status !== 'extracted' && status !== 'completed' && status !== 'error' && (
         <>
           <UploadConfiguration
             selectedModel={selectedModel}
@@ -52,8 +62,13 @@ const Upload = () => {
         />
       )}
 
-      {analysisResult && status === 'completed' && (
-        <ValidationResults analysisResult={analysisResult} />
+      {analysisResult && (status === 'completed' || status === 'error') && (
+        <DetailedValidationResults
+          errors={detectedErrors}
+          analysisResult={analysisResult}
+          onNewAnalysis={handleNewAnalysis}
+          onGenerateReport={handleGenerateReport}
+        />
       )}
     </div>
   );

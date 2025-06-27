@@ -268,6 +268,53 @@ export type Database = {
         }
         Relationships: []
       }
+      erros_detectados: {
+        Row: {
+          analise_id: string
+          campo_afetado: string
+          confianca: number
+          created_at: string
+          id: string
+          severidade: string
+          sugestao_correcao: string | null
+          tipo_erro: string
+          valor_encontrado: string | null
+          valor_esperado: string | null
+        }
+        Insert: {
+          analise_id: string
+          campo_afetado: string
+          confianca: number
+          created_at?: string
+          id?: string
+          severidade: string
+          sugestao_correcao?: string | null
+          tipo_erro: string
+          valor_encontrado?: string | null
+          valor_esperado?: string | null
+        }
+        Update: {
+          analise_id?: string
+          campo_afetado?: string
+          confianca?: number
+          created_at?: string
+          id?: string
+          severidade?: string
+          sugestao_correcao?: string | null
+          tipo_erro?: string
+          valor_encontrado?: string | null
+          valor_esperado?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erros_detectados_analise_id_fkey"
+            columns: ["analise_id"]
+            isOneToOne: false
+            referencedRelation: "analises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -225,6 +225,59 @@ export const useSupabase = () => {
     }
   };
 
+  const saveDetectedErrors = async (analysisId: string, errors: any[]) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const errorRecords = errors.map(error => ({
+        analise_id: analysisId,
+        tipo_erro: error.tipo_erro,
+        campo_afetado: error.campo_afetado,
+        valor_encontrado: error.valor_encontrado,
+        valor_esperado: error.valor_esperado,
+        sugestao_correcao: error.sugestao_correcao,
+        severidade: error.severidade,
+        confianca: error.confianca
+      }));
+
+      const { data, error: insertError } = await supabase
+        .from('erros_detectados')
+        .insert(errorRecords)
+        .select();
+
+      if (insertError) throw insertError;
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDetectedErrors = async (analysisId: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('erros_detectados')
+        .select('*')
+        .eq('analise_id', analysisId)
+        .order('severidade', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
@@ -235,6 +288,8 @@ export const useSupabase = () => {
     createContractModel,
     getAllContractModels,
     saveExtractedFields,
-    getExtractedFields
+    getExtractedFields,
+    saveDetectedErrors,
+    getDetectedErrors
   };
 };
