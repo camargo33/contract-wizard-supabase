@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface UploadStatusProps {
-  status: 'waiting' | 'processing' | 'completed' | 'error';
+  status: 'waiting' | 'processing' | 'completed' | 'error' | 'extracted';
 }
 
 const UploadStatus = ({ status }: UploadStatusProps) => {
@@ -12,6 +12,8 @@ const UploadStatus = ({ status }: UploadStatusProps) => {
         return 'Aguardando arquivo';
       case 'processing':
         return 'Processando arquivo...';
+      case 'extracted':
+        return 'Dados extraídos';
       case 'completed':
         return 'Análise concluída';
       case 'error':
@@ -27,6 +29,8 @@ const UploadStatus = ({ status }: UploadStatusProps) => {
         return 'text-gray-600';
       case 'processing':
         return 'text-blue-600';
+      case 'extracted':
+        return 'text-yellow-600';
       case 'completed':
         return 'text-green-600';
       case 'error':
@@ -40,6 +44,7 @@ const UploadStatus = ({ status }: UploadStatusProps) => {
     <div className="flex items-center space-x-2">
       <div className={`h-3 w-3 rounded-full ${
         status === 'processing' ? 'bg-blue-600 animate-pulse' :
+        status === 'extracted' ? 'bg-yellow-600' :
         status === 'completed' ? 'bg-green-600' :
         status === 'error' ? 'bg-red-600' : 'bg-gray-400'
       }`} />
