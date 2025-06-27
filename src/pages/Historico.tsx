@@ -1,121 +1,72 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Calendar, Eye, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react';
-import { useAppContext } from '@/contexts/AppContext';
-import { Database } from '@/integrations/supabase/types';
-import SearchAndFilters from '@/components/SearchAndFilters';
-import { NoAnalysesState, NoSearchResultsState, ErrorState } from '@/components/EmptyState';
-import { TableSkeleton } from '@/components/ui/loading-skeleton';
-import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, Download, Eye, Calendar, Filter, Search } from 'lucide-react';
+import { useSupabase } from '@/hooks/useSupabase';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
 
 type Analysis = Database['public']['Tables']['analises']['Row'];
 
 const Historico = () => {
-  const { state } = useAppContext();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const [filteredAnalyses, setFilteredAnalyses] = useState<Analysis[]>([]);
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
-  const [errorCountFilter, setErrorCountFilter] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState('all');
+  const { getAnalyses } = useSupabase();
+  const { toast } = useToast();
+
+  const loadAnalyses = async () => {
+    try {
+      setLoading(true);
+      const data = await getAnalyses();
+      setAnalyses(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar histórico",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simular carregamento
-    setTimeout(() => setIsLoading(false), 1000);
+    loadAnalyses();
   }, []);
 
-  useEffect(() => {
-    let filtered = [...state.analyses];
-
-    // Filtro de busca
-    if (searchTerm) {
-      filtered = filtered.filter(analysis =>
-        analysis.arquivo_nome.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const filteredAnalyses = analyses.filter((analysis) => {
+    const matchesSearch = analysis.arquivo_nome?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || analysis.status === statusFilter;
+    
+    let matchesDate = true;
+    if (dateFilter !== 'all') {
+      const analysisDate = new Date(analysis.created_at);
+      const now = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          matchesDate = analysisDate.toDateString() === now.toDateString();
+          break;
+        case 'week':
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          matchesDate = analysisDate >= weekAgo;
+          break;
+        case 'month':
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          matchesDate = analysisDate >= monthAgo;
+          break;
+      }
     }
-
-    // Filtro de status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(analysis => analysis.status === statusFilter);
-    }
-
-    // Filtro de data
-    if (dateFilter) {
-      const filterDate = new Date(dateFilter);
-      filtered = filtered.filter(analysis => {
-        const analysisDate = new Date(analysis.created_at);
-        return analysisDate.toDateString() === filterDate.toDateString();
-      });
-    }
-
-    // Filtro de quantidade de erros
-    if (errorCountFilter !== 'all') {
-      filtered = filtered.filter(analysis => {
-        const errorCount = analysis.total_erros || 0;
-        switch (errorCountFilter) {
-          case '0': return errorCount === 0;
-          case '1-5': return errorCount >= 1 && errorCount <= 5;
-          case '6-10': return errorCount >= 6 && errorCount <= 10;
-          case '10+': return errorCount > 10;
-          default: return true;
-        }
-      });
-    }
-
-    setFilteredAnalyses(filtered);
-  }, [state.analyses, searchTerm, statusFilter, dateFilter, errorCountFilter]);
-
-  const hasActiveFilters = searchTerm || statusFilter !== 'all' || dateFilter || errorCountFilter !== 'all';
-
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setDateFilter('');
-    setErrorCountFilter('all');
-  };
-
-  const handleNewAnalysis = () => {
-    navigate('/upload');
-  };
-
-  const handleViewAnalysis = (analysisId: string) => {
-    toast({
-      title: "Visualizar Análise",
-      description: "Funcionalidade em desenvolvimento",
-    });
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'processando':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'concluido':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'erro':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'concluido':
-        return 'default' as const;
-      case 'erro':
-        return 'destructive' as const;
-      default:
-        return 'secondary' as const;
-    }
-  };
+    
+    return matchesSearch && matchesStatus && matchesDate;
+  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -127,84 +78,114 @@ const Historico = () => {
     });
   };
 
-  if (isLoading) {
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      'processando': { variant: 'secondary' as const, label: 'Processando' },
+      'concluido': { variant: 'default' as const, label: 'Concluído' },
+      'erro': { variant: 'destructive' as const, label: 'Erro' }
+    };
+    
+    const config = statusConfig[status as keyof typeof statusConfig] || { variant: 'secondary' as const, label: status };
+    
     return (
-      <div className="max-w-6xl mx-auto space-y-6 bg-white min-h-screen p-6">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-          <TableSkeleton />
-        </div>
+      <Badge variant={config.variant}>
+        {config.label}
+      </Badge>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 fade-in bg-white min-h-screen p-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Histórico de Análises</h2>
+          <p className="text-gray-600">Visualize e gerencie suas análises anteriores</p>
+        </div>
+        <Button onClick={loadAnalyses} className="bg-blue-600 hover:bg-blue-700 text-white">
+          Atualizar
+        </Button>
+      </div>
+
+      {/* Search and Filters */}
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="bg-white">
-          <CardTitle className="flex items-center space-x-2 text-gray-900">
-            <FileText className="h-5 w-5 text-gray-700" />
-            <span>Histórico de Análises</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 bg-white">
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-2xl font-bold text-gray-900">
-                {state.analyses.length}
-              </div>
-              <div className="text-sm text-gray-600">Total de Análises</div>
+        <CardContent className="p-6 bg-white">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar por nome do arquivo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-white border-gray-200 text-gray-900"
+              />
             </div>
-            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-2xl font-bold text-green-600">
-                {state.analyses.filter(a => a.status === 'concluido').length}
-              </div>
-              <div className="text-sm text-gray-600">Concluídas</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-2xl font-bold text-orange-600">
-                {state.analyses.filter(a => a.status === 'processando').length}
-              </div>
-              <div className="text-sm text-gray-600">Em Processamento</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-2xl font-bold text-red-600">
-                {state.analyses.filter(a => a.status === 'erro').length}
-              </div>
-              <div className="text-sm text-gray-600">Com Erro</div>
+            <div className="flex gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40 bg-white border-gray-200 text-gray-900">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  <SelectItem value="all" className="text-gray-900">Todos</SelectItem>
+                  <SelectItem value="processando" className="text-gray-900">Processando</SelectItem>
+                  <SelectItem value="concluido" className="text-gray-900">Concluído</SelectItem>
+                  <SelectItem value="erro" className="text-gray-900">Erro</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-40 bg-white border-gray-200 text-gray-900">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  <SelectItem value="all" className="text-gray-900">Todos</SelectItem>
+                  <SelectItem value="today" className="text-gray-900">Hoje</SelectItem>
+                  <SelectItem value="week" className="text-gray-900">Última semana</SelectItem>
+                  <SelectItem value="month" className="text-gray-900">Último mês</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Filtros */}
-          <SearchAndFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            dateFilter={dateFilter}
-            onDateChange={setDateFilter}
-            errorCountFilter={errorCountFilter}
-            onErrorCountChange={setErrorCountFilter}
-            onClearFilters={handleClearFilters}
-            hasActiveFilters={hasActiveFilters}
-          />
-
-          {/* Tabela de Análises */}
-          {state.analyses.length === 0 ? (
-            <NoAnalysesState onNewAnalysis={handleNewAnalysis} />
-          ) : filteredAnalyses.length === 0 ? (
-            hasActiveFilters ? (
-              <NoSearchResultsState searchTerm={searchTerm} />
-            ) : (
-              <ErrorState onRetry={() => window.location.reload()} />
-            )
-          ) : (
+      {/* Results */}
+      {filteredAnalyses.length === 0 ? (
+        <Card className="bg-white border border-gray-200 shadow-sm">
+          <CardContent className="p-8 text-center bg-white">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {analyses.length === 0 ? 'Nenhuma análise encontrada' : 'Nenhum resultado encontrado'}
+            </h3>
+            <p className="text-gray-600">
+              {analyses.length === 0 
+                ? 'Comece fazendo upload de um contrato para análise'
+                : 'Tente ajustar os filtros para encontrar o que procura'
+              }
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-white border border-gray-200 shadow-sm">
+          <CardHeader className="bg-white">
+            <CardTitle className="text-gray-900">
+              Análises ({filteredAnalyses.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="bg-white">
             <div className="border rounded-lg overflow-hidden bg-white">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     <TableHead className="text-gray-900 font-semibold">Arquivo</TableHead>
-                    <TableHead className="text-gray-900 font-semibold">Data/Hora</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Data</TableHead>
                     <TableHead className="text-gray-900 font-semibold">Status</TableHead>
                     <TableHead className="text-gray-900 font-semibold">Erros</TableHead>
                     <TableHead className="text-gray-900 font-semibold">Tempo</TableHead>
@@ -213,71 +194,45 @@ const Historico = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredAnalyses.map((analysis) => (
-                    <TableRow 
-                      key={analysis.id} 
-                      className="hover:bg-gray-50 transition-colors duration-200 bg-white"
-                    >
+                    <TableRow key={analysis.id} className="hover:bg-gray-50 transition-colors bg-white">
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-2">
-                          <FileText className="h-4 w-4 text-gray-600" />
-                          <span className="truncate max-w-[200px] text-gray-900">
-                            {analysis.arquivo_nome}
-                          </span>
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <span className="text-gray-900">{analysis.arquivo_nome}</span>
                         </div>
                       </TableCell>
+                      <TableCell className="text-gray-700">{formatDate(analysis.created_at)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2 text-sm text-gray-700">
-                          <Calendar className="h-4 w-4" />
-                          <span>{formatDate(analysis.created_at)}</span>
+                        {getStatusBadge(analysis.status || 'processando')}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">
+                          {analysis.total_erros || 0} erros
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">
+                          {analysis.tempo_processamento ? `${analysis.tempo_processamento}min` : '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+                            <Eye className="h-4 w-4 text-gray-600" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+                            <Download className="h-4 w-4 text-gray-600" />
+                          </Button>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(analysis.status)}>
-                          <div className="flex items-center space-x-1">
-                            {getStatusIcon(analysis.status)}
-                            <span className="capitalize">{analysis.status}</span>
-                          </div>
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {analysis.total_erros !== null ? (
-                          <Badge 
-                            variant={analysis.total_erros > 0 ? "destructive" : "secondary"}
-                            className="font-medium"
-                          >
-                            {analysis.total_erros} erros
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {analysis.tempo_processamento ? (
-                          <span className="text-sm font-medium text-gray-900">
-                            {analysis.tempo_processamento}s
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleViewAnalysis(analysis.id)}
-                          className="hover:bg-gray-100 hover:text-gray-900"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
