@@ -1,7 +1,7 @@
 
 import { useSupabase } from '@/hooks/useSupabase';
 import { useToast } from '@/hooks/use-toast';
-import { ValidationEngine, ContractModel } from '@/services/validationEngine';
+import { GeminiAnalysisService } from '@/services/geminiService';
 import { AnalysisStatus, AnalysisResult, PageData, DetectedError } from '@/types/upload';
 
 interface UseValidationProcessingProps {
@@ -24,9 +24,14 @@ export const useValidationProcessing = ({
 
   const performValidation = async (analysisId: string, extractedPages: PageData[]) => {
     try {
-      console.log('Iniciando validação...');
+      console.log('Iniciando validação com Gemini...');
       setStatus('processing');
       setProgress(0);
+
+      // Verificar se a API key está configurada
+      if (!import.meta.env.VITE_OPENROUTER_API_KEY) {
+        throw new Error('API key do OpenRouter não configurada. Configure VITE_OPENROUTER_API_KEY nas variáveis de ambiente.');
+      }
 
       // Obter modelo de contrato selecionado
       const models = await getContractModels();
@@ -36,72 +41,89 @@ export const useValidationProcessing = ({
         throw new Error('Modelo de contrato não encontrado');
       }
 
-      // Converter dados do Supabase para o formato esperado pelo ValidationEngine
-      const contractModel: ContractModel = {
-        id: selectedModelData.id,
-        nome: selectedModelData.nome,
-        campos_obrigatorios: Array.isArray(selectedModelData.campos_obrigatorios) 
-          ? selectedModelData.campos_obrigatorios as string[]
-          : [],
-        regras_validacao: selectedModelData.regras_validacao
-      };
+      setProgress(20);
 
-      // Combinar todos os campos extraídos
-      const allFields = extractedPages.flatMap(page => page.extractedFields);
-      
-      // Executar validação
-      const validationEngine = new ValidationEngine();
-      const errors = validationEngine.validateExtractedData(allFields, contractModel);
+      // Combinar todo o texto extraído das páginas
+      const allText = extractedPages
+        .map(page => page.rawText)
+        .join('\n\n')
+        .trim();
 
-      setProgress(50);
-
-      // Salvar erros detectados
-      if (errors.length > 0) {
-        await saveDetectedErrors(analysisId, errors);
+      if (!allText) {
+        throw new Error('Nenhum texto foi extraído do documento');
       }
 
-      setProgress(80);
+      console.log('Texto extraído para análise:', allText.substring(0, 500) + '...');
+      setProgress(40);
+
+      // Executar análise com Gemini
+      const geminiResult = await GeminiAnalysisService.analyzeContract(
+        allText, 
+        selectedModelData.nome
+      );
+
+      setProgress(70);
+
+      // Converter resultado do Gemini para o formato esperado
+      const detectedErrors: DetectedError[] = geminiResult.erros.map((erro, index) => ({
+        id: `error-${index}`,
+        tipo_erro: erro.severidade === 'critico' ? 'campo_obrigatorio' : 'validacao',
+        campo_afetado: erro.campo,
+        valor_encontrado: erro.valor_encontrado,
+        valor_esperado: erro.valor_esperado,
+        sugestao_correcao: erro.sugestao_correcao,
+        severidade: erro.severidade,
+        confianca: erro.confianca
+      }));
+
+      // Salvar erros detectados
+      if (detectedErrors.length > 0) {
+        await saveDetectedErrors(analysisId, detectedErrors);
+      }
+
+      setProgress(90);
 
       // Atualizar análise
+      const finalStatus = geminiResult.status_contrato === 'aprovado' ? 'concluido' : 'erro';
       await updateAnalysis(analysisId, {
-        status: errors.length > 0 ? 'erro' : 'concluido',
-        total_erros: errors.length,
-        tempo_processamento: 3
+        status: finalStatus,
+        total_erros: geminiResult.resumo.total_erros,
+        tempo_processamento: 5
       });
-
-      setProgress(100);
 
       // Preparar resultado da análise
       const result: AnalysisResult = {
-        totalErrors: errors.length,
-        missingFields: errors
+        totalErrors: geminiResult.resumo.total_erros,
+        missingFields: detectedErrors
           .filter(e => e.tipo_erro === 'campo_obrigatorio')
           .map(e => e.campo_afetado),
-        validationErrors: errors
+        validationErrors: detectedErrors
           .filter(e => e.tipo_erro !== 'campo_obrigatorio')
           .map(e => `${e.campo_afetado}: ${e.sugestao_correcao}`),
-        processingTime: 3,
+        processingTime: 5,
       };
 
       setAnalysisResult(result);
-      setDetectedErrors(errors);
-      setStatus(errors.length > 0 ? 'error' : 'completed');
+      setDetectedErrors(detectedErrors);
+      setStatus(geminiResult.resumo.total_erros > 0 ? 'error' : 'completed');
+      setProgress(100);
       
       toast({
-        title: "Validação concluída",
-        description: `${errors.length} erros encontrados`,
-        variant: errors.length > 0 ? "destructive" : "default",
+        title: "Análise concluída com Gemini",
+        description: `${geminiResult.resumo.total_erros} erros encontrados - Status: ${geminiResult.status_contrato}`,
+        variant: geminiResult.resumo.total_erros > 0 ? "destructive" : "default",
       });
 
     } catch (error: any) {
-      console.error('Erro na validação:', error);
+      console.error('Erro na validação com Gemini:', error);
       setStatus('error');
       await updateAnalysis(analysisId, {
         status: 'erro'
       });
+      
       toast({
-        title: "Erro na validação",
-        description: error.message,
+        title: "Erro na análise",
+        description: error.message || "Erro desconhecido durante a análise",
         variant: "destructive",
       });
     }

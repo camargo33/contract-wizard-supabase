@@ -4,6 +4,7 @@ import FileUpload from '@/components/FileUpload';
 import UploadConfiguration from '@/components/UploadConfiguration';
 import ExtractedFieldsDisplay from '@/components/ExtractedFieldsDisplay';
 import DetailedValidationResults from '@/components/DetailedValidationResults';
+import GeminiConfigStatus from '@/components/GeminiConfigStatus';
 import { useUploadProcess } from '@/hooks/useUploadProcess';
 
 const Upload = () => {
@@ -43,8 +44,10 @@ const Upload = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Análise de Contrato</h2>
-        <p className="text-gray-600">Faça upload de um contrato e selecione um modelo para análise automática</p>
+        <p className="text-gray-600">Faça upload de um contrato e selecione um modelo para análise automática com Google Gemini</p>
       </div>
+
+      <GeminiConfigStatus />
 
       {status !== 'extracted' && status !== 'completed' && status !== 'error' && (
         <>
