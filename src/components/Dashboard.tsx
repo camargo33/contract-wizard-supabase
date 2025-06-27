@@ -7,24 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Upload, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
+import { Database } from '@/integrations/supabase/types';
 
-interface ContractModel {
-  id: string;
-  nome: string;
-  campos_obrigatorios: string[];
-  regras_validacao: Record<string, any>;
-  template_ativo: boolean;
-  created_at: string;
-}
-
-interface Analysis {
-  id: string;
-  arquivo_nome: string;
-  status: 'processando' | 'concluido' | 'erro';
-  total_erros: number;
-  tempo_processamento: number | null;
-  created_at: string;
-}
+type ContractModel = Database['public']['Tables']['contratos_modelo']['Row'];
+type Analysis = Database['public']['Tables']['analises']['Row'];
 
 interface DashboardProps {
   user: User;
@@ -76,7 +62,7 @@ const Dashboard = ({ user }: DashboardProps) => {
     }
   };
 
-  const getStatusIcon = (status: Analysis['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'processando':
         return <Clock className="h-4 w-4 text-yellow-500" />;
@@ -84,10 +70,12 @@ const Dashboard = ({ user }: DashboardProps) => {
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'erro':
         return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusColor = (status: Analysis['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'processando':
         return 'bg-yellow-100 text-yellow-800';
@@ -95,7 +83,16 @@ const Dashboard = ({ user }: DashboardProps) => {
         return 'bg-green-100 text-green-800';
       case 'erro':
         return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const getCamposObrigatorios = (campos: any): string[] => {
+    if (Array.isArray(campos)) {
+      return campos;
+    }
+    return [];
   };
 
   if (loading) {
@@ -195,7 +192,7 @@ const Dashboard = ({ user }: DashboardProps) => {
                           <Badge className={getStatusColor(analysis.status)}>
                             {analysis.status}
                           </Badge>
-                          {analysis.total_erros > 0 && (
+                          {analysis.total_erros && analysis.total_erros > 0 && (
                             <Badge variant="destructive">
                               {analysis.total_erros} erros
                             </Badge>
@@ -220,33 +217,36 @@ const Dashboard = ({ user }: DashboardProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {contractModels.map((model) => (
-                    <div key={model.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900">
-                          {model.nome}
-                        </h3>
-                        <Badge variant={model.template_ativo ? "default" : "secondary"}>
-                          {model.template_ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {model.campos_obrigatorios.length} campos obrigatórios
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {model.campos_obrigatorios.slice(0, 3).map((campo, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {campo}
+                  {contractModels.map((model) => {
+                    const camposObrigatorios = getCamposObrigatorios(model.campos_obrigatorios);
+                    return (
+                      <div key={model.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-medium text-gray-900">
+                            {model.nome}
+                          </h3>
+                          <Badge variant={model.template_ativo ? "default" : "secondary"}>
+                            {model.template_ativo ? "Ativo" : "Inativo"}
                           </Badge>
-                        ))}
-                        {model.campos_obrigatorios.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{model.campos_obrigatorios.length - 3}
-                          </Badge>
-                        )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {camposObrigatorios.length} campos obrigatórios
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {camposObrigatorios.slice(0, 3).map((campo, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {campo}
+                            </Badge>
+                          ))}
+                          {camposObrigatorios.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{camposObrigatorios.length - 3}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
