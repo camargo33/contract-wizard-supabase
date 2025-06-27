@@ -120,6 +120,41 @@ export type Database = {
         }
         Relationships: []
       }
+      campos_extraidos: {
+        Row: {
+          analise_id: string
+          campos_identificados: Json | null
+          created_at: string
+          id: string
+          pagina_numero: number
+          texto_bruto: string | null
+        }
+        Insert: {
+          analise_id: string
+          campos_identificados?: Json | null
+          created_at?: string
+          id?: string
+          pagina_numero: number
+          texto_bruto?: string | null
+        }
+        Update: {
+          analise_id?: string
+          campos_identificados?: Json | null
+          created_at?: string
+          id?: string
+          pagina_numero?: number
+          texto_bruto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campos_extraidos_analise_id_fkey"
+            columns: ["analise_id"]
+            isOneToOne: false
+            referencedRelation: "analises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_clauses: {
         Row: {
           base_contract_id: string

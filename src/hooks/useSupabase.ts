@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
 type Analysis = Database['public']['Tables']['analises']['Row'];
 type ContractModel = Database['public']['Tables']['contratos_modelo']['Row'];
+type ExtractedField = Database['public']['Tables']['campos_extraidos']['Row'];
 
 export const useSupabase = () => {
   const [loading, setLoading] = useState(false);
@@ -79,6 +79,57 @@ export const useSupabase = () => {
         .from('analises')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveExtractedFields = async (analysisId: string, pageData: {
+    pageNumber: number;
+    rawText: string;
+    extractedFields: any[];
+  }) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('campos_extraidos')
+        .insert({
+          analise_id: analysisId,
+          pagina_numero: pageData.pageNumber,
+          texto_bruto: pageData.rawText,
+          campos_identificados: pageData.extractedFields
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getExtractedFields = async (analysisId: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('campos_extraidos')
+        .select('*')
+        .eq('analise_id', analysisId)
+        .order('pagina_numero', { ascending: true });
 
       if (error) throw error;
       return data;
@@ -182,6 +233,8 @@ export const useSupabase = () => {
     getAnalyses,
     getContractModels,
     createContractModel,
-    getAllContractModels
+    getAllContractModels,
+    saveExtractedFields,
+    getExtractedFields
   };
 };

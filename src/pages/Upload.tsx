@@ -2,14 +2,16 @@
 import React, { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
 import ContractModelSelector from '@/components/ContractModelSelector';
+import ExtractedFieldsDisplay from '@/components/ExtractedFieldsDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useAppContext } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import { ocrService } from '@/services/ocrService';
 import { Database } from '@/integrations/supabase/types';
 
-type AnalysisStatus = 'waiting' | 'processing' | 'completed' | 'error';
+type AnalysisStatus = 'waiting' | 'processing' | 'extracted' | 'completed' | 'error';
 type Analysis = Database['public']['Tables']['analises']['Row'];
 
 interface AnalysisResult {
@@ -17,6 +19,12 @@ interface AnalysisResult {
   missingFields: string[];
   validationErrors: string[];
   processingTime: number;
+}
+
+interface PageData {
+  pageNumber: number;
+  rawText: string;
+  extractedFields: any[];
 }
 
 const Upload = () => {
@@ -27,8 +35,9 @@ const Upload = () => {
   const [status, setStatus] = useState<AnalysisStatus>('waiting');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
+  const [extractedPages, setExtractedPages] = useState<PageData[]>([]);
   
-  const { uploadFile, updateAnalysis } = useSupabase();
+  const { uploadFile, updateAnalysis, saveExtractedFields } = useSupabase();
   const { dispatch } = useAppContext();
   const { toast } = useToast();
 
@@ -36,24 +45,73 @@ const Upload = () => {
     setSelectedFile(file);
     setStatus('waiting');
     setAnalysisResult(null);
+    setExtractedPages([]);
     setProgress(0);
     setCurrentAnalysisId(null);
   };
 
-  const simulateAnalysis = async (analysisId: string) => {
+  const performOCRExtraction = async (file: File, analysisId: string) => {
+    try {
+      console.log('Iniciando extração OCR...');
+      setStatus('processing');
+      
+      // Processar documento com OCR
+      const pages = await ocrService.processDocument(file, (progress) => {
+        setProgress(progress);
+      });
+
+      console.log('OCR concluído, salvando campos extraídos...');
+
+      // Salvar campos extraídos no Supabase
+      for (const page of pages) {
+        await saveExtractedFields(analysisId, {
+          pageNumber: page.pageNumber,
+          rawText: page.rawText,
+          extractedFields: page.extractedFields
+        });
+      }
+
+      setExtractedPages(pages);
+      setStatus('extracted');
+      
+      // Atualizar análise no Supabase
+      await updateAnalysis(analysisId, {
+        status: 'processando' // Ainda em processamento, aguardando validação
+      });
+
+      toast({
+        title: "Extração concluída",
+        description: `${pages.reduce((acc, p) => acc + p.extractedFields.length, 0)} campos identificados`,
+      });
+
+    } catch (error: any) {
+      console.error('Erro na extração OCR:', error);
+      setStatus('error');
+      await updateAnalysis(analysisId, {
+        status: 'erro'
+      });
+      toast({
+        title: "Erro na extração",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const simulateValidation = async (analysisId: string) => {
     setIsAnalyzing(true);
     setStatus('processing');
     setProgress(0);
 
-    // Simular progresso da análise
+    // Simular progresso da validação
     const intervals = [10, 25, 45, 65, 80, 95, 100];
     
     for (const targetProgress of intervals) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       setProgress(targetProgress);
     }
 
-    // Simular resultado da análise
+    // Simular resultado da validação
     const mockResult: AnalysisResult = {
       totalErrors: Math.floor(Math.random() * 5),
       missingFields: ['endereco', 'telefone'],
@@ -73,14 +131,14 @@ const Upload = () => {
       setStatus(mockResult.totalErrors > 0 ? 'error' : 'completed');
       
       toast({
-        title: "Análise concluída",
+        title: "Validação concluída",
         description: `${mockResult.totalErrors} erros encontrados`,
         variant: mockResult.totalErrors > 0 ? "destructive" : "default",
       });
     } catch (error: any) {
       setStatus('error');
       toast({
-        title: "Erro na análise",
+        title: "Erro na validação",
         description: error.message,
         variant: "destructive",
       });
@@ -109,17 +167,19 @@ const Upload = () => {
     }
 
     try {
+      setIsAnalyzing(true);
+      
       // Upload arquivo e criar registro
       const { analysis } = await uploadFile(selectedFile);
       setCurrentAnalysisId(analysis.id);
       
       toast({
         title: "Upload realizado",
-        description: "Arquivo enviado com sucesso. Iniciando análise...",
+        description: "Arquivo enviado com sucesso. Iniciando extração OCR...",
       });
 
-      // Iniciar análise simulada
-      await simulateAnalysis(analysis.id);
+      // Iniciar extração OCR
+      await performOCRExtraction(selectedFile, analysis.id);
     } catch (error: any) {
       toast({
         title: "Erro no upload",
@@ -127,6 +187,27 @@ const Upload = () => {
         variant: "destructive",
       });
       setStatus('error');
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleProceedToValidation = async () => {
+    if (!currentAnalysisId) return;
+    
+    try {
+      toast({
+        title: "Iniciando validação",
+        description: "Comparando com o modelo selecionado...",
+      });
+
+      // Iniciar validação simulada
+      await simulateValidation(currentAnalysisId);
+    } catch (error: any) {
+      toast({
+        title: "Erro na validação",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -137,28 +218,40 @@ const Upload = () => {
         <p className="text-gray-600">Faça upload de um contrato e selecione um modelo para análise automática</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuração da Análise</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ContractModelSelector
-            value={selectedModel}
-            onChange={setSelectedModel}
-            required={true}
+      {status !== 'extracted' && status !== 'completed' && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração da Análise</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ContractModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+                required={true}
+              />
+            </CardContent>
+          </Card>
+
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
+            progress={progress}
+            status={status}
           />
-        </CardContent>
-      </Card>
+        </>
+      )}
 
-      <FileUpload
-        onFileSelect={handleFileSelect}
-        onAnalyze={handleAnalyze}
-        isAnalyzing={isAnalyzing}
-        progress={progress}
-        status={status}
-      />
+      {status === 'extracted' && (
+        <ExtractedFieldsDisplay
+          pages={extractedPages}
+          onProceedToValidation={handleProceedToValidation}
+          isLoading={isAnalyzing}
+        />
+      )}
 
-      {analysisResult && (
+      {analysisResult && status === 'completed' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -167,7 +260,7 @@ const Upload = () => {
               ) : (
                 <XCircle className="h-5 w-5 text-red-600" />
               )}
-              <span>Resultado da Análise</span>
+              <span>Resultado da Validação</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
