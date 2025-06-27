@@ -2,6 +2,7 @@
 import { cpf, cnpj } from 'cpf-cnpj-validator';
 
 export interface ValidationError {
+  id: string;
   tipo_erro: 'campo_obrigatorio' | 'formato_invalido' | 'inconsistencia' | 'valor_incorreto';
   campo_afetado: string;
   valor_encontrado?: string;
@@ -51,6 +52,7 @@ export class ValidationEngine {
     for (const required of requiredFields) {
       if (!fieldTypes.includes(required)) {
         this.addError({
+          id: crypto.randomUUID(),
           tipo_erro: 'campo_obrigatorio',
           campo_afetado: required,
           valor_encontrado: undefined,
@@ -89,6 +91,7 @@ export class ValidationEngine {
     const cleanCPF = field.value.replace(/\D/g, '');
     if (!cpf.isValid(cleanCPF)) {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'formato_invalido',
         campo_afetado: 'cpf',
         valor_encontrado: field.value,
@@ -104,6 +107,7 @@ export class ValidationEngine {
     const cleanCNPJ = field.value.replace(/\D/g, '');
     if (!cnpj.isValid(cleanCNPJ)) {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'formato_invalido',
         campo_afetado: 'cnpj',
         valor_encontrado: field.value,
@@ -119,6 +123,7 @@ export class ValidationEngine {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(field.value)) {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'formato_invalido',
         campo_afetado: 'email',
         valor_encontrado: field.value,
@@ -135,6 +140,7 @@ export class ValidationEngine {
     const cleanPhone = field.value.replace(/\s/g, '');
     if (!phoneRegex.test(cleanPhone)) {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'formato_invalido',
         campo_afetado: 'telefone',
         valor_encontrado: field.value,
@@ -150,6 +156,7 @@ export class ValidationEngine {
     const cepRegex = /^\d{5}-?\d{3}$/;
     if (!cepRegex.test(field.value)) {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'formato_invalido',
         campo_afetado: 'cep',
         valor_encontrado: field.value,
@@ -171,6 +178,7 @@ export class ValidationEngine {
 
     if (hasCPF && fidelidade && fidelidade !== '12') {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'inconsistencia',
         campo_afetado: 'fidelidade',
         valor_encontrado: fidelidade,
@@ -183,6 +191,7 @@ export class ValidationEngine {
 
     if (hasCNPJ && fidelidade && fidelidade !== '24') {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'inconsistencia',
         campo_afetado: 'fidelidade',
         valor_encontrado: fidelidade,
@@ -215,6 +224,7 @@ export class ValidationEngine {
 
     if (valorEsperado && Math.abs(valorEncontrado - valorEsperado) > 0.01) {
       this.addError({
+        id: crypto.randomUUID(),
         tipo_erro: 'valor_incorreto',
         campo_afetado: 'valor',
         valor_encontrado: valor,

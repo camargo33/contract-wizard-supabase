@@ -1,7 +1,7 @@
 
 import { useSupabase } from '@/hooks/useSupabase';
 import { useToast } from '@/hooks/use-toast';
-import { ValidationEngine } from '@/services/validationEngine';
+import { ValidationEngine, ContractModel } from '@/services/validationEngine';
 import { AnalysisStatus, AnalysisResult, PageData, DetectedError } from '@/types/upload';
 
 interface UseValidationProcessingProps {
@@ -36,12 +36,22 @@ export const useValidationProcessing = ({
         throw new Error('Modelo de contrato não encontrado');
       }
 
+      // Converter dados do Supabase para o formato esperado pelo ValidationEngine
+      const contractModel: ContractModel = {
+        id: selectedModelData.id,
+        nome: selectedModelData.nome,
+        campos_obrigatorios: Array.isArray(selectedModelData.campos_obrigatorios) 
+          ? selectedModelData.campos_obrigatorios as string[]
+          : [],
+        regras_validacao: selectedModelData.regras_validacao
+      };
+
       // Combinar todos os campos extraídos
       const allFields = extractedPages.flatMap(page => page.extractedFields);
       
       // Executar validação
       const validationEngine = new ValidationEngine();
-      const errors = validationEngine.validateExtractedData(allFields, selectedModelData);
+      const errors = validationEngine.validateExtractedData(allFields, contractModel);
 
       setProgress(50);
 

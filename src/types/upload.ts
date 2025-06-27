@@ -21,6 +21,6 @@ export interface DetectedError {
   valor_encontrado?: string;
   valor_esperado?: string;
   sugestao_correcao?: string;
-  severidade: string;
+  severidade: 'critica' | 'alta' | 'media' | 'baixa';
   confianca: number;
 }
