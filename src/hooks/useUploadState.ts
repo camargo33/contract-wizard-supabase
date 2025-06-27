@@ -13,14 +13,24 @@ export const useUploadState = () => {
   const [extractedPages, setExtractedPages] = useState<PageData[]>([]);
   const [detectedErrors, setDetectedErrors] = useState<DetectedError[]>([]);
 
+  // Log para debug
+  console.log('useUploadState: Estado atual', {
+    selectedFile: selectedFile?.name || 'NENHUM',
+    selectedModel: selectedModel || 'NENHUM',
+    isAnalyzing,
+    status
+  });
+
   const resetState = () => {
     setSelectedFile(null);
+    setSelectedModel('');
     setStatus('waiting');
     setAnalysisResult(null);
     setExtractedPages([]);
     setProgress(0);
     setCurrentAnalysisId(null);
     setDetectedErrors([]);
+    setIsAnalyzing(false);
   };
 
   return {

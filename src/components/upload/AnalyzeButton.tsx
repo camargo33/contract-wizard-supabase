@@ -10,17 +10,37 @@ interface AnalyzeButtonProps {
 }
 
 const AnalyzeButton = ({ onAnalyze, disabled, isAnalyzing }: AnalyzeButtonProps) => {
-  console.log('AnalyzeButton: Estado atual', {
+  console.log('AnalyzeButton: Renderização com estado', {
     disabled,
     isAnalyzing,
-    buttonClickable: !disabled
+    buttonClickable: !disabled,
+    willHandleClick: !disabled && !isAnalyzing
   });
+
+  const handleClick = () => {
+    console.log('AnalyzeButton: CLIQUE DETECTADO!', {
+      disabled,
+      isAnalyzing,
+      willExecuteCallback: !disabled && !isAnalyzing
+    });
+    
+    if (!disabled && !isAnalyzing) {
+      console.log('AnalyzeButton: Executando callback onAnalyze');
+      onAnalyze();
+    } else {
+      console.log('AnalyzeButton: Clique bloqueado - botão desabilitado ou analisando');
+    }
+  };
 
   return (
     <Button
-      onClick={onAnalyze}
+      onClick={handleClick}
       disabled={disabled}
-      className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+      className={`min-w-[120px] text-white transition-all duration-200 ${
+        disabled 
+          ? 'bg-gray-400 cursor-not-allowed opacity-50' 
+          : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+      }`}
       type="button"
     >
       {isAnalyzing ? (

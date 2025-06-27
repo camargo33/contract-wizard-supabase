@@ -20,15 +20,23 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
   const { getContractModels } = useSupabase();
   const { toast } = useToast();
 
+  // Log para debug do seletor
+  console.log('ContractModelSelector: Estado atual', {
+    value,
+    modelsCount: models.length,
+    loading
+  });
+
   useEffect(() => {
     const loadModels = async () => {
       try {
+        console.log('ContractModelSelector: Carregando modelos...');
         setLoading(true);
         const data = await getContractModels();
-        console.log('Modelos carregados:', data); // Debug
+        console.log('ContractModelSelector: Modelos carregados', data);
         setModels(data || []);
       } catch (error: any) {
-        console.error('Erro ao carregar modelos:', error); // Debug
+        console.error('ContractModelSelector: Erro ao carregar modelos:', error);
         toast({
           title: "Erro ao carregar modelos",
           description: error.message,
@@ -41,6 +49,15 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
 
     loadModels();
   }, []);
+
+  const handleValueChange = (newValue: string) => {
+    console.log('ContractModelSelector: Modelo selecionado', {
+      oldValue: value,
+      newValue,
+      modelExists: models.find(m => m.id === newValue)?.nome
+    });
+    onChange(newValue);
+  };
 
   // Recarregar modelos quando o componente recebe foco
   useEffect(() => {
@@ -65,7 +82,7 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
       <Label htmlFor="contract-model" className="text-gray-900">
         Modelo de Contrato {required && <span className="text-red-500">*</span>}
       </Label>
-      <Select value={value} onValueChange={onChange} disabled={loading}>
+      <Select value={value} onValueChange={handleValueChange} disabled={loading}>
         <SelectTrigger id="contract-model" className="bg-white border-gray-200 text-gray-900">
           <SelectValue 
             placeholder={loading ? "Carregando modelos..." : "Selecione um modelo"} 
@@ -83,6 +100,13 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
         <p className="text-sm text-amber-600">
           Nenhum modelo ativo encontrado. Configure modelos na página de Configurações.
         </p>
+      )}
+      
+      {/* Debug info para o seletor */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
+          Debug Seletor: valor="{value}" | modelos={models.length} | carregando={loading ? 'sim' : 'não'}
+        </div>
       )}
     </div>
   );
