@@ -8,6 +8,7 @@ import { useUploadProcess } from '@/hooks/useUploadProcess';
 
 const Upload = () => {
   const {
+    selectedFile,
     selectedModel,
     setSelectedModel,
     isAnalyzing,
@@ -30,6 +31,14 @@ const Upload = () => {
     console.log('Gerando relatório...', { analysisResult, detectedErrors });
   };
 
+  // Debug info
+  console.log('Upload page state:', {
+    selectedFile: selectedFile?.name,
+    selectedModel,
+    isAnalyzing,
+    status
+  });
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="text-center mb-6">
@@ -50,6 +59,8 @@ const Upload = () => {
             isAnalyzing={isAnalyzing}
             progress={progress}
             status={status}
+            selectedFile={selectedFile}
+            selectedModel={selectedModel}
           />
         </>
       )}

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface AnalyzeButtonProps {
   onAnalyze: () => void;
@@ -13,11 +14,11 @@ const AnalyzeButton = ({ onAnalyze, disabled, isAnalyzing }: AnalyzeButtonProps)
     <Button
       onClick={onAnalyze}
       disabled={disabled}
-      className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white"
+      className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isAnalyzing ? (
         <>
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+          <Loader2 className="animate-spin h-4 w-4 mr-2" />
           Analisando...
         </>
       ) : (

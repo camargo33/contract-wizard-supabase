@@ -47,6 +47,7 @@ export const useUploadProcess = () => {
   });
 
   const handleFileSelect = (file: File) => {
+    console.log('Arquivo selecionado:', file.name);
     setSelectedFile(file);
     setStatus('waiting');
     setAnalysisResult(null);
@@ -56,6 +57,12 @@ export const useUploadProcess = () => {
   };
 
   const handleAnalyze = async () => {
+    console.log('Iniciando análise...', { 
+      selectedFile: selectedFile?.name, 
+      selectedModel,
+      isAnalyzing 
+    });
+
     if (!selectedFile) {
       toast({
         title: "Arquivo obrigatório",
@@ -76,20 +83,27 @@ export const useUploadProcess = () => {
 
     try {
       setIsAnalyzing(true);
+      setStatus('processing');
+      setProgress(10);
       
+      console.log('Fazendo upload do arquivo...');
       const { analysis } = await uploadFile(selectedFile);
       setCurrentAnalysisId(analysis.id);
+      setProgress(30);
       
       toast({
         title: "Upload realizado",
         description: "Arquivo enviado com sucesso. Iniciando extração OCR...",
       });
 
+      console.log('Iniciando OCR...');
       await performOCRExtraction(selectedFile, analysis.id);
+      
     } catch (error: any) {
+      console.error('Erro no processamento:', error);
       toast({
         title: "Erro no upload",
-        description: error.message,
+        description: error.message || "Erro desconhecido durante o processamento",
         variant: "destructive",
       });
       setStatus('error');
@@ -98,7 +112,10 @@ export const useUploadProcess = () => {
   };
 
   const handleProceedToValidation = async () => {
-    if (!currentAnalysisId) return;
+    if (!currentAnalysisId) {
+      console.error('ID da análise não encontrado');
+      return;
+    }
     
     try {
       setIsAnalyzing(true);
@@ -108,17 +125,28 @@ export const useUploadProcess = () => {
         description: "Comparando com o modelo selecionado...",
       });
 
+      console.log('Iniciando validação...');
       await performValidation(currentAnalysisId, extractedPages);
     } catch (error: any) {
+      console.error('Erro na validação:', error);
       toast({
         title: "Erro na validação",
-        description: error.message,
+        description: error.message || "Erro desconhecido durante a validação",
         variant: "destructive",
       });
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  // Debug para verificar se o botão deve estar habilitado
+  const canAnalyze = !!(selectedFile && selectedModel && !isAnalyzing);
+  console.log('Estado do botão:', {
+    selectedFile: !!selectedFile,
+    selectedModel: !!selectedModel,
+    isAnalyzing,
+    canAnalyze
+  });
 
   return {
     selectedFile,
@@ -132,6 +160,7 @@ export const useUploadProcess = () => {
     detectedErrors,
     handleFileSelect,
     handleAnalyze,
-    handleProceedToValidation
+    handleProceedToValidation,
+    canAnalyze // Exportando para debug
   };
 };

@@ -13,14 +13,28 @@ interface FileUploadProps {
   isAnalyzing: boolean;
   progress: number;
   status: 'waiting' | 'processing' | 'completed' | 'error';
+  selectedFile?: File | null;
+  selectedModel?: string;
 }
 
-const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: FileUploadProps) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const FileUpload = ({ 
+  onFileSelect, 
+  onAnalyze, 
+  isAnalyzing, 
+  progress, 
+  status,
+  selectedFile = null,
+  selectedModel = ''
+}: FileUploadProps) => {
+  const [internalSelectedFile, setInternalSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
+  // Use selectedFile prop if provided, otherwise use internal state
+  const currentFile = selectedFile || internalSelectedFile;
+
   const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
+    console.log('FileUpload: Arquivo selecionado', file.name);
+    setInternalSelectedFile(file);
     onFileSelect(file);
     toast({
       title: "Arquivo carregado",
@@ -29,7 +43,8 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
   };
 
   const handleFileRemove = () => {
-    setSelectedFile(null);
+    console.log('FileUpload: Arquivo removido');
+    setInternalSelectedFile(null);
   };
 
   const handleValidationError = (message: string) => {
@@ -39,6 +54,24 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
       variant: "destructive",
     });
   };
+
+  const handleAnalyzeClick = () => {
+    console.log('FileUpload: Botão analisar clicado', {
+      currentFile: currentFile?.name,
+      selectedModel,
+      isAnalyzing
+    });
+    onAnalyze();
+  };
+
+  // Verificar se pode analisar
+  const canAnalyze = !!(currentFile && selectedModel && !isAnalyzing);
+  console.log('FileUpload: Estado do botão', {
+    currentFile: !!currentFile,
+    selectedModel: !!selectedModel,
+    isAnalyzing,
+    canAnalyze
+  });
 
   return (
     <div className="space-y-6">
@@ -50,7 +83,7 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
       <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-6 bg-white">
           <FileDropZone
-            selectedFile={selectedFile}
+            selectedFile={currentFile}
             onFileSelect={handleFileSelect}
             onFileRemove={handleFileRemove}
             onValidationError={handleValidationError}
@@ -61,13 +94,20 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
       <div className="flex items-center justify-between">
         <UploadStatus status={status} />
         <AnalyzeButton
-          onAnalyze={onAnalyze}
-          disabled={!selectedFile || isAnalyzing}
+          onAnalyze={handleAnalyzeClick}
+          disabled={!canAnalyze}
           isAnalyzing={isAnalyzing}
         />
       </div>
 
       <ProgressIndicator progress={progress} isVisible={isAnalyzing} />
+      
+      {/* Debug info - remover em produção */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+          Debug: Arquivo={currentFile?.name || 'nenhum'} | Modelo={selectedModel || 'nenhum'} | Analisando={isAnalyzing ? 'sim' : 'não'} | Pode analisar={canAnalyze ? 'sim' : 'não'}
+        </div>
+      )}
     </div>
   );
 };
