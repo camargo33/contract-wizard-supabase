@@ -1,94 +1,80 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
-
+/* CIABRASNET Design System */
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* CIABRASNET Corporate Colors */
+    --primary-blue: #0066CC;
+    --primary-dark: #003366;
+    --primary-light: #E6F3FF;
+    --accent-orange: #FF6B35;
+    --success-green: #28A745;
+    --error-red: #DC3545;
+    --neutral-gray: #6C757D;
+    --background: #F8F9FA;
+
+    /* Shadcn compatibility */
+    --background: 248 249 250;
     --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
+    --card: 255 255 255;
     --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
+    --popover: 255 255 255;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
+    --primary: 204 102 0;
+    --primary-foreground: 255 255 255;
+    --secondary: 230 243 255;
+    --secondary-foreground: 0 51 102;
+    --muted: 248 249 250;
+    --muted-foreground: 108 117 125;
+    --accent: 255 107 53;
+    --accent-foreground: 255 255 255;
+    --destructive: 220 53 69;
+    --destructive-foreground: 255 255 255;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
+    --ring: 204 102 0;
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 51 102;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 204 102 0;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 230 243 255;
+    --sidebar-accent-foreground: 0 51 102;
+    --sidebar-border: 0 51 102;
+    --sidebar-ring: 204 102 0;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 0 51 102;
+    --foreground: 255 255 255;
+    --card: 0 51 102;
+    --card-foreground: 255 255 255;
+    --popover: 0 51 102;
+    --popover-foreground: 255 255 255;
+    --primary: 255 255 255;
+    --primary-foreground: 0 51 102;
+    --secondary: 230 243 255;
+    --secondary-foreground: 255 255 255;
+    --muted: 230 243 255;
+    --muted-foreground: 108 117 125;
+    --accent: 255 107 53;
+    --accent-foreground: 255 255 255;
+    --destructive: 220 53 69;
+    --destructive-foreground: 255 255 255;
+    --border: 230 243 255;
+    --input: 230 243 255;
+    --ring: 255 255 255;
+    --sidebar-background: 0 51 102;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 204 102 0;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 230 243 255;
+    --sidebar-accent-foreground: 0 51 102;
+    --sidebar-border: 230 243 255;
+    --sidebar-ring: 204 102 0;
   }
 }
 
@@ -99,5 +85,61 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+}
+
+/* CIABRASNET Custom Components */
+@layer components {
+  .ciabrasnet-gradient {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+  }
+
+  .ciabrasnet-btn-primary {
+    @apply bg-[var(--primary-blue)] hover:bg-[var(--primary-dark)] text-white;
+    transition: all 300ms ease;
+  }
+
+  .ciabrasnet-btn-accent {
+    @apply bg-[var(--accent-orange)] hover:bg-orange-600 text-white;
+    transition: all 300ms ease;
+  }
+
+  .ciabrasnet-card {
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm;
+    transition: all 300ms ease;
+  }
+
+  .ciabrasnet-card:hover {
+    @apply shadow-md transform translate-y-[-2px];
+  }
+
+  .loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .fade-in {
+    animation: fadeIn 300ms ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .status-success {
+    @apply bg-[var(--success-green)] text-white;
+  }
+
+  .status-error {
+    @apply bg-[var(--error-red)] text-white;
+  }
+
+  .status-warning {
+    @apply bg-[var(--accent-orange)] text-white;
+  }
+
+  .status-processing {
+    @apply bg-[var(--neutral-gray)] text-white;
   }
 }
