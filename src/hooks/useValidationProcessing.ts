@@ -39,11 +39,6 @@ export const useValidationProcessing = ({
       setStatus('processing');
       setProgress(0);
 
-      // Verificar se a API key está configurada
-      if (!import.meta.env.VITE_OPENROUTER_API_KEY) {
-        throw new Error('API key do OpenRouter não configurada. Configure VITE_OPENROUTER_API_KEY nas variáveis de ambiente.');
-      }
-
       // Obter modelo de contrato selecionado
       const models = await getContractModels();
       const selectedModelData = models?.find(m => m.id === selectedModel);
@@ -83,7 +78,7 @@ export const useValidationProcessing = ({
         valor_encontrado: erro.valor_encontrado,
         valor_esperado: erro.valor_esperado,
         sugestao_correcao: erro.sugestao_correcao,
-        severidade: mapSeverity(erro.severidade), // Use the mapping function
+        severidade: mapSeverity(erro.severidade),
         confianca: erro.confianca
       }));
 
@@ -128,9 +123,15 @@ export const useValidationProcessing = ({
     } catch (error: any) {
       console.error('Erro na validação com Gemini:', error);
       setStatus('error');
-      await updateAnalysis(analysisId, {
-        status: 'erro'
-      });
+      
+      // Atualizar análise com erro
+      try {
+        await updateAnalysis(analysisId, {
+          status: 'erro'
+        });
+      } catch (updateError) {
+        console.error('Erro ao atualizar status da análise:', updateError);
+      }
       
       toast({
         title: "Erro na análise",

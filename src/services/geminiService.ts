@@ -1,13 +1,7 @@
-
 import OpenAI from 'openai';
+import { DetectedError } from '@/types/upload';
 
-const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
-  dangerouslyAllowBrowser: true
-});
-
-export interface AnalysisError {
+interface GeminiError {
   severidade: 'critico' | 'alto' | 'medio' | 'baixo';
   campo: string;
   valor_encontrado: string;
@@ -16,15 +10,17 @@ export interface AnalysisError {
   confianca: number;
 }
 
+interface GeminiResumo {
+  total_erros: number;
+  criticos: number;
+  altos: number;
+  medios: number;
+  baixos: number;
+}
+
 export interface AnalysisResult {
-  erros: AnalysisError[];
-  resumo: {
-    total_erros: number;
-    criticos: number;
-    altos: number;
-    medios: number;
-    baixos: number;
-  };
+  erros: GeminiError[];
+  resumo: GeminiResumo;
   status_contrato: 'aprovado' | 'com_restricoes' | 'reprovado';
 }
 
@@ -86,9 +82,23 @@ Retorne APENAS um JSON válido no formato:
 }
 `;
 
+  private static getOpenAIClient() {
+    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('VITE_OPENROUTER_API_KEY não configurada. Configure a variável de ambiente para usar a análise com IA.');
+    }
+
+    return new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: apiKey,
+      dangerouslyAllowBrowser: true
+    });
+  }
+
   static async analyzeContract(contractText: string, modelType: string): Promise<AnalysisResult> {
     try {
-      console.log('Iniciando análise com Gemini...', { modelType, textLength: contractText.length });
+      const openai = this.getOpenAIClient();
       
       const response = await openai.chat.completions.create({
         model: 'google/gemini-2.0-flash-exp',
@@ -111,8 +121,6 @@ Retorne APENAS um JSON válido no formato:
         throw new Error('Resposta vazia da IA');
       }
 
-      console.log('Resposta da IA:', content);
-
       // Parse JSON da resposta
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -120,13 +128,14 @@ Retorne APENAS um JSON válido no formato:
       }
 
       const result = JSON.parse(jsonMatch[0]) as AnalysisResult;
-      console.log('Resultado da análise:', result);
-      
       return result;
 
     } catch (error) {
       console.error('Erro na análise:', error);
-      throw new Error(`Falha na análise do contrato: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      if (error instanceof Error && error.message.includes('VITE_OPENROUTER_API_KEY')) {
+        throw error; // Re-throw configuration errors
+      }
+      throw new Error('Falha na análise do contrato');
     }
   }
 }
