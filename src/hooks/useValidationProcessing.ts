@@ -22,6 +22,17 @@ export const useValidationProcessing = ({
   const { updateAnalysis, saveDetectedErrors, getContractModels } = useSupabase();
   const { toast } = useToast();
 
+  // Helper function to map Gemini severity to DetectedError severity
+  const mapSeverity = (geminiSeverity: 'critico' | 'alto' | 'medio' | 'baixo'): 'critica' | 'alta' | 'media' | 'baixa' => {
+    const severityMap = {
+      'critico': 'critica' as const,
+      'alto': 'alta' as const,
+      'medio': 'media' as const,
+      'baixo': 'baixa' as const
+    };
+    return severityMap[geminiSeverity];
+  };
+
   const performValidation = async (analysisId: string, extractedPages: PageData[]) => {
     try {
       console.log('Iniciando validação com Gemini...');
@@ -72,7 +83,7 @@ export const useValidationProcessing = ({
         valor_encontrado: erro.valor_encontrado,
         valor_esperado: erro.valor_esperado,
         sugestao_correcao: erro.sugestao_correcao,
-        severidade: erro.severidade,
+        severidade: mapSeverity(erro.severidade), // Use the mapping function
         confianca: erro.confianca
       }));
 
