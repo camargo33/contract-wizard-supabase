@@ -3,8 +3,13 @@ import React, { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useSupabase } from '@/hooks/useSupabase';
+import { useAppContext } from '@/contexts/AppContext';
+import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
 
 type AnalysisStatus = 'waiting' | 'processing' | 'completed' | 'error';
+type Analysis = Database['public']['Tables']['analises']['Row'];
 
 interface AnalysisResult {
   totalErrors: number;
@@ -19,15 +24,21 @@ const Upload = () => {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<AnalysisStatus>('waiting');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
+  
+  const { uploadFile, updateAnalysis } = useSupabase();
+  const { dispatch } = useAppContext();
+  const { toast } = useToast();
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     setStatus('waiting');
     setAnalysisResult(null);
     setProgress(0);
+    setCurrentAnalysisId(null);
   };
 
-  const simulateAnalysis = async () => {
+  const simulateAnalysis = async (analysisId: string) => {
     setIsAnalyzing(true);
     setStatus('processing');
     setProgress(0);
@@ -48,14 +59,56 @@ const Upload = () => {
       processingTime: 3,
     };
 
-    setAnalysisResult(mockResult);
-    setStatus(mockResult.totalErrors > 0 ? 'error' : 'completed');
-    setIsAnalyzing(false);
+    // Atualizar análise no Supabase
+    try {
+      await updateAnalysis(analysisId, {
+        status: mockResult.totalErrors > 0 ? 'erro' : 'concluido',
+        total_erros: mockResult.totalErrors,
+        tempo_processamento: mockResult.processingTime
+      });
+
+      setAnalysisResult(mockResult);
+      setStatus(mockResult.totalErrors > 0 ? 'error' : 'completed');
+      
+      toast({
+        title: "Análise concluída",
+        description: `${mockResult.totalErrors} erros encontrados`,
+        variant: mockResult.totalErrors > 0 ? "destructive" : "default",
+      });
+    } catch (error: any) {
+      setStatus('error');
+      toast({
+        title: "Erro na análise",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const handleAnalyze = () => {
-    if (selectedFile) {
-      simulateAnalysis();
+  const handleAnalyze = async () => {
+    if (!selectedFile) return;
+
+    try {
+      // Upload arquivo e criar registro
+      const { analysis } = await uploadFile(selectedFile);
+      setCurrentAnalysisId(analysis.id);
+      
+      toast({
+        title: "Upload realizado",
+        description: "Arquivo enviado com sucesso. Iniciando análise...",
+      });
+
+      // Iniciar análise simulada
+      await simulateAnalysis(analysis.id);
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: error.message,
+        variant: "destructive",
+      });
+      setStatus('error');
     }
   };
 
