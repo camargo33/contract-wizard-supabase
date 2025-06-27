@@ -26,25 +26,15 @@ const FileUpload = ({
   selectedFile = null,
   selectedModel = ''
 }: FileUploadProps) => {
-  const [internalSelectedFile, setInternalSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
-
-  // Use selectedFile prop if provided, otherwise use internal state
-  const currentFile = selectedFile || internalSelectedFile;
 
   const handleFileSelect = (file: File) => {
     console.log('FileUpload: Arquivo selecionado', file.name);
-    setInternalSelectedFile(file);
     onFileSelect(file);
     toast({
       title: "Arquivo carregado",
       description: `${file.name} foi carregado com sucesso.`,
     });
-  };
-
-  const handleFileRemove = () => {
-    console.log('FileUpload: Arquivo removido');
-    setInternalSelectedFile(null);
   };
 
   const handleValidationError = (message: string) => {
@@ -57,23 +47,27 @@ const FileUpload = ({
 
   const handleAnalyzeClick = () => {
     console.log('FileUpload: Botão analisar clicado', {
-      currentFile: currentFile?.name,
+      selectedFile: selectedFile?.name,
       selectedModel,
       isAnalyzing
     });
     onAnalyze();
   };
 
-  // Verificar se pode analisar - simplificado para garantir que funcione
-  const canAnalyze = Boolean(currentFile && selectedModel && !isAnalyzing);
+  // Condições simples e diretas para habilitar o botão
+  const hasFile = Boolean(selectedFile);
+  const hasModel = Boolean(selectedModel && selectedModel.trim() !== '');
+  const notAnalyzing = !isAnalyzing;
+  const canAnalyze = hasFile && hasModel && notAnalyzing;
   
-  console.log('FileUpload: Estado do botão', {
-    currentFile: Boolean(currentFile),
-    currentFileName: currentFile?.name,
-    selectedModel: Boolean(selectedModel),
-    selectedModelValue: selectedModel,
-    isAnalyzing,
-    canAnalyze
+  console.log('FileUpload: Verificação do botão', {
+    hasFile,
+    fileName: selectedFile?.name,
+    hasModel,
+    modelValue: selectedModel,
+    notAnalyzing,
+    canAnalyze,
+    finalButtonState: canAnalyze ? 'HABILITADO' : 'DESABILITADO'
   });
 
   return (
@@ -86,9 +80,9 @@ const FileUpload = ({
       <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-6 bg-white">
           <FileDropZone
-            selectedFile={currentFile}
+            selectedFile={selectedFile}
             onFileSelect={handleFileSelect}
-            onFileRemove={handleFileRemove}
+            onFileRemove={() => {}} // Não precisamos mais desta função
             onValidationError={handleValidationError}
           />
         </CardContent>
@@ -105,15 +99,20 @@ const FileUpload = ({
 
       <ProgressIndicator progress={progress} isVisible={isAnalyzing} />
       
-      {/* Debug info - expandido para melhor troubleshooting */}
+      {/* Debug info melhorado */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-          <div>Debug Info:</div>
-          <div>Arquivo: {currentFile?.name || 'nenhum'}</div>
-          <div>Modelo: {selectedModel || 'nenhum'}</div>
-          <div>Analisando: {isAnalyzing ? 'sim' : 'não'}</div>
-          <div>Pode analisar: {canAnalyze ? 'SIM' : 'NÃO'}</div>
-          <div>Status: {status}</div>
+        <div className="text-xs text-gray-500 p-4 bg-gray-100 rounded border">
+          <div className="font-bold mb-2">🔍 Debug Info:</div>
+          <div>📁 Arquivo: {selectedFile?.name || '❌ NENHUM'}</div>
+          <div>🏷️ Modelo: {selectedModel || '❌ NENHUM'}</div>
+          <div>⚙️ Analisando: {isAnalyzing ? '✅ SIM' : '❌ NÃO'}</div>
+          <div>📊 Status: {status}</div>
+          <div className="mt-2 font-bold">
+            🎯 Botão: {canAnalyze ? '✅ HABILITADO' : '❌ DESABILITADO'}
+          </div>
+          <div className="mt-1 text-xs">
+            Condições: arquivo={hasFile ? '✅' : '❌'} | modelo={hasModel ? '✅' : '❌'} | não_analisando={notAnalyzing ? '✅' : '❌'}
+          </div>
         </div>
       )}
     </div>

@@ -10,9 +10,10 @@ interface AnalyzeButtonProps {
 }
 
 const AnalyzeButton = ({ onAnalyze, disabled, isAnalyzing }: AnalyzeButtonProps) => {
-  console.log('AnalyzeButton render:', {
+  console.log('AnalyzeButton: Estado atual', {
     disabled,
-    isAnalyzing
+    isAnalyzing,
+    buttonClickable: !disabled
   });
 
   return (
