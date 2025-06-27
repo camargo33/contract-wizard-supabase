@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
+import ContractModelSelector from '@/components/ContractModelSelector';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -20,6 +21,7 @@ interface AnalysisResult {
 
 const Upload = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<AnalysisStatus>('waiting');
@@ -88,7 +90,23 @@ const Upload = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      toast({
+        title: "Arquivo obrigatório",
+        description: "Selecione um arquivo para análise.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedModel) {
+      toast({
+        title: "Modelo obrigatório",
+        description: "Selecione um modelo de contrato para comparação.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       // Upload arquivo e criar registro
@@ -114,6 +132,24 @@ const Upload = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Análise de Contrato</h2>
+        <p className="text-gray-600">Faça upload de um contrato e selecione um modelo para análise automática</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuração da Análise</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ContractModelSelector
+            value={selectedModel}
+            onChange={setSelectedModel}
+            required={true}
+          />
+        </CardContent>
+      </Card>
+
       <FileUpload
         onFileSelect={handleFileSelect}
         onAnalyze={handleAnalyze}
