@@ -106,16 +106,14 @@ const Historico = () => {
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'processando':
-        return 'status-warning';
       case 'concluido':
-        return 'status-success';
+        return 'default' as const;
       case 'erro':
-        return 'status-error';
+        return 'destructive' as const;
       default:
-        return 'status-processing';
+        return 'secondary' as const;
     }
   };
 
@@ -131,8 +129,8 @@ const Historico = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="ciabrasnet-card p-6">
+      <div className="max-w-6xl mx-auto space-y-6 bg-white min-h-screen p-6">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
           <TableSkeleton />
         </div>
       </div>
@@ -140,11 +138,11 @@ const Historico = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 fade-in bg-white">
+    <div className="max-w-6xl mx-auto space-y-6 fade-in bg-white min-h-screen p-6">
       <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader className="bg-white">
-          <CardTitle className="flex items-center space-x-2 text-gray-800">
-            <FileText className="h-5 w-5" />
+          <CardTitle className="flex items-center space-x-2 text-gray-900">
+            <FileText className="h-5 w-5 text-gray-700" />
             <span>Histórico de Análises</span>
           </CardTitle>
         </CardHeader>
@@ -152,7 +150,7 @@ const Historico = () => {
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-2xl font-bold text-gray-700">
+              <div className="text-2xl font-bold text-gray-900">
                 {state.analyses.length}
               </div>
               <div className="text-sm text-gray-600">Total de Análises</div>
@@ -205,12 +203,12 @@ const Historico = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead className="text-gray-700">Arquivo</TableHead>
-                    <TableHead className="text-gray-700">Data/Hora</TableHead>
-                    <TableHead className="text-gray-700">Status</TableHead>
-                    <TableHead className="text-gray-700">Erros</TableHead>
-                    <TableHead className="text-gray-700">Tempo</TableHead>
-                    <TableHead className="text-gray-700">Ações</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Arquivo</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Data/Hora</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Status</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Erros</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Tempo</TableHead>
+                    <TableHead className="text-gray-900 font-semibold">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -222,19 +220,19 @@ const Historico = () => {
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-2">
                           <FileText className="h-4 w-4 text-gray-600" />
-                          <span className="truncate max-w-[200px] text-gray-800">
+                          <span className="truncate max-w-[200px] text-gray-900">
                             {analysis.arquivo_nome}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2 text-sm text-gray-700">
                           <Calendar className="h-4 w-4" />
                           <span>{formatDate(analysis.created_at)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${getStatusBadgeClass(analysis.status)} border`}>
+                        <Badge variant={getStatusBadgeVariant(analysis.status)}>
                           <div className="flex items-center space-x-1">
                             {getStatusIcon(analysis.status)}
                             <span className="capitalize">{analysis.status}</span>
@@ -255,7 +253,7 @@ const Historico = () => {
                       </TableCell>
                       <TableCell>
                         {analysis.tempo_processamento ? (
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-gray-900">
                             {analysis.tempo_processamento}s
                           </span>
                         ) : (
@@ -267,7 +265,7 @@ const Historico = () => {
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleViewAnalysis(analysis.id)}
-                          className="hover:bg-gray-100 hover:text-gray-800"
+                          className="hover:bg-gray-100 hover:text-gray-900"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

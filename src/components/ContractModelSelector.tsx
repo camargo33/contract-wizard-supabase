@@ -62,18 +62,18 @@ const ContractModelSelector = ({ value, onChange, required = true }: ContractMod
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="contract-model">
+      <Label htmlFor="contract-model" className="text-gray-900">
         Modelo de Contrato {required && <span className="text-red-500">*</span>}
       </Label>
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        <SelectTrigger id="contract-model">
+        <SelectTrigger id="contract-model" className="bg-white border-gray-200 text-gray-900">
           <SelectValue 
             placeholder={loading ? "Carregando modelos..." : "Selecione um modelo"} 
           />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white border-gray-200 z-50">
           {models.map((model) => (
-            <SelectItem key={model.id} value={model.id}>
+            <SelectItem key={model.id} value={model.id} className="text-gray-900 hover:bg-gray-50">
               {model.nome}
             </SelectItem>
           ))}

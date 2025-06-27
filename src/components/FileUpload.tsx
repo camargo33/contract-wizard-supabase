@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Upload, FileText, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -121,10 +120,10 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
         <p className="text-gray-600">Faça upload de um arquivo PDF para análise automática</p>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardContent className="p-6 bg-white">
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors bg-white ${
               dragActive
                 ? 'border-blue-400 bg-blue-50'
                 : selectedFile
@@ -170,7 +169,7 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
                     id="file-upload"
                   />
                   <label htmlFor="file-upload">
-                    <Button asChild>
+                    <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
                       <span>Selecionar Arquivo</span>
                     </Button>
                   </label>
@@ -199,7 +198,7 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
         <Button
           onClick={onAnalyze}
           disabled={!selectedFile || isAnalyzing}
-          className="min-w-[120px]"
+          className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white"
         >
           {isAnalyzing ? (
             <>
@@ -213,12 +212,12 @@ const FileUpload = ({ onFileSelect, onAnalyze, isAnalyzing, progress, status }: 
       </div>
 
       {isAnalyzing && (
-        <Card>
-          <CardContent className="p-4">
+        <Card className="bg-white border border-gray-200 shadow-sm">
+          <CardContent className="p-4 bg-white">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Progresso da análise</span>
-                <span>{progress}%</span>
+                <span className="text-gray-900">Progresso da análise</span>
+                <span className="text-gray-900">{progress}%</span>
               </div>
               <Progress value={progress} className="w-full" />
             </div>
