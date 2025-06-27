@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analises: {
+        Row: {
+          arquivo_nome: string
+          created_at: string
+          id: string
+          status: string
+          tempo_processamento: number | null
+          total_erros: number | null
+        }
+        Insert: {
+          arquivo_nome: string
+          created_at?: string
+          id?: string
+          status?: string
+          tempo_processamento?: number | null
+          total_erros?: number | null
+        }
+        Update: {
+          arquivo_nome?: string
+          created_at?: string
+          id?: string
+          status?: string
+          tempo_processamento?: number | null
+          total_erros?: number | null
+        }
+        Relationships: []
+      }
       analysis_history: {
         Row: {
           analysis_content: Json
@@ -176,6 +203,33 @@ export type Database = {
           terms_info?: Json | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      contratos_modelo: {
+        Row: {
+          campos_obrigatorios: Json | null
+          created_at: string
+          id: string
+          nome: string
+          regras_validacao: Json | null
+          template_ativo: boolean
+        }
+        Insert: {
+          campos_obrigatorios?: Json | null
+          created_at?: string
+          id?: string
+          nome: string
+          regras_validacao?: Json | null
+          template_ativo?: boolean
+        }
+        Update: {
+          campos_obrigatorios?: Json | null
+          created_at?: string
+          id?: string
+          nome?: string
+          regras_validacao?: Json | null
+          template_ativo?: boolean
         }
         Relationships: []
       }
