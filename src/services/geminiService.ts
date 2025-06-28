@@ -1,5 +1,7 @@
+
 import OpenAI from 'openai';
 import { DetectedError } from '@/types/upload';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GeminiError {
   severidade: 'critico' | 'alto' | 'medio' | 'baixo';
@@ -82,11 +84,29 @@ Retorne APENAS um JSON válido no formato:
 }
 `;
 
-  private static getOpenAIClient() {
+  private static async getOpenAIClient() {
+    // Tentar primeiro buscar a API key do Supabase Secrets
+    try {
+      const { data, error } = await supabase.functions.invoke('get-secret', {
+        body: { secretName: 'OPENROUTER_API_KEY' }
+      });
+      
+      if (data?.value) {
+        return new OpenAI({
+          baseURL: 'https://openrouter.ai/api/v1',
+          apiKey: data.value,
+          dangerouslyAllowBrowser: true
+        });
+      }
+    } catch (secretError) {
+      console.log('Não foi possível acessar Supabase Secrets, tentando variável de ambiente...');
+    }
+
+    // Fallback para variável de ambiente
     const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
     
     if (!apiKey) {
-      throw new Error('VITE_OPENROUTER_API_KEY não configurada. Configure a variável de ambiente para usar a análise com IA.');
+      throw new Error('OPENROUTER_API_KEY não configurada. Configure a API key nas configurações do projeto para usar a análise com IA.');
     }
 
     return new OpenAI({
@@ -98,7 +118,7 @@ Retorne APENAS um JSON válido no formato:
 
   static async analyzeContract(contractText: string, modelType: string): Promise<AnalysisResult> {
     try {
-      const openai = this.getOpenAIClient();
+      const openai = await this.getOpenAIClient();
       
       const response = await openai.chat.completions.create({
         model: 'google/gemini-2.0-flash-exp',
@@ -132,7 +152,7 @@ Retorne APENAS um JSON válido no formato:
 
     } catch (error) {
       console.error('Erro na análise:', error);
-      if (error instanceof Error && error.message.includes('VITE_OPENROUTER_API_KEY')) {
+      if (error instanceof Error && error.message.includes('OPENROUTER_API_KEY')) {
         throw error; // Re-throw configuration errors
       }
       throw new Error('Falha na análise do contrato');
