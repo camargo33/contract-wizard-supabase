@@ -46,33 +46,14 @@ const FileUpload = ({
   };
 
   const handleAnalyzeClick = () => {
-    console.log('FileUpload: Clique no botão analisar', {
-      selectedFile: selectedFile?.name,
-      selectedModel,
-      isAnalyzing,
-      canAnalyze: hasFile && hasModel && notAnalyzing
-    });
+    console.log('FileUpload: Clique no botão analisar');
     onAnalyze();
   };
 
-  // Verificações detalhadas para debug
+  // Verificações para habilitar o botão
   const hasFile = Boolean(selectedFile);
   const hasModel = Boolean(selectedModel && selectedModel.trim() !== '');
-  const notAnalyzing = !isAnalyzing;
-  const canAnalyze = hasFile && hasModel && notAnalyzing;
-  
-  // Log detalhado para identificar o problema
-  console.log('FileUpload: Análise detalhada do botão', {
-    'Arquivo presente': hasFile,
-    'Nome do arquivo': selectedFile?.name || 'NENHUM',
-    'Modelo presente': hasModel,
-    'Valor do modelo': `"${selectedModel}"`,
-    'Modelo válido': selectedModel && selectedModel.trim() !== '',
-    'Não está analisando': notAnalyzing,
-    'Estado isAnalyzing': isAnalyzing,
-    'Resultado final canAnalyze': canAnalyze,
-    'Status atual': status
-  });
+  const canAnalyze = hasFile && hasModel && !isAnalyzing;
 
   return (
     <div className="space-y-6">
@@ -103,43 +84,31 @@ const FileUpload = ({
 
       <ProgressIndicator progress={progress} isVisible={isAnalyzing} />
       
-      {/* Debug info detalhado */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-500 p-4 bg-yellow-50 rounded border border-yellow-200">
-          <div className="font-bold mb-3 text-red-600">🚨 DEBUG DETALHADO:</div>
-          
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <div className="font-semibold text-blue-600">ARQUIVO:</div>
-              <div>Presente: {hasFile ? '✅ SIM' : '❌ NÃO'}</div>
-              <div>Nome: {selectedFile?.name || '❌ NENHUM'}</div>
-              <div>Tipo: {selectedFile?.type || 'N/A'}</div>
+      {/* Status detalhado para debug */}
+      {status === 'processing' && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="text-sm text-blue-800">
+              <div className="font-semibold mb-2">Processamento em andamento:</div>
+              <div className="space-y-1">
+                {progress < 25 && <div>• Carregando arquivo PDF...</div>}
+                {progress >= 25 && progress < 85 && <div>• Extraindo texto das páginas...</div>}
+                {progress >= 85 && <div>• Identificando campos estruturados...</div>}
+              </div>
             </div>
-            
-            <div>
-              <div className="font-semibold text-green-600">MODELO:</div>
-              <div>Presente: {hasModel ? '✅ SIM' : '❌ NÃO'}</div>
-              <div>Valor: "{selectedModel}"</div>
-              <div>Length: {selectedModel?.length || 0}</div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {status === 'error' && (
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="p-4">
+            <div className="text-sm text-red-800">
+              <div className="font-semibold mb-2">Erro no processamento</div>
+              <div>Verifique o console do navegador para mais detalhes ou tente novamente com outro arquivo.</div>
             </div>
-          </div>
-          
-          <div className="mb-3">
-            <div className="font-semibold text-purple-600">ESTADO:</div>
-            <div>Analisando: {isAnalyzing ? '✅ SIM' : '❌ NÃO'}</div>
-            <div>Status: {status}</div>
-            <div>Progresso: {progress}%</div>
-          </div>
-          
-          <div className="mt-3 p-2 bg-white rounded border">
-            <div className="font-bold text-lg">
-              🎯 BOTÃO: {canAnalyze ? '✅ HABILITADO' : '❌ DESABILITADO'}
-            </div>
-            <div className="text-sm mt-1">
-              Condições: arquivo={hasFile ? '✅' : '❌'} | modelo={hasModel ? '✅' : '❌'} | não_analisando={notAnalyzing ? '✅' : '❌'}
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
