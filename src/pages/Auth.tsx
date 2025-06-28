@@ -72,16 +72,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white border border-gray-200">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <FileText className="h-12 w-12 text-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
+          <CardTitle className="text-2xl font-bold text-black">
             Sistema de Análise de Contratos
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600">
             Faça login ou crie uma conta para começar
           </CardDescription>
         </CardHeader>
@@ -95,7 +95,7 @@ const Auth = () => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">
+                  <label htmlFor="email" className="text-sm font-medium text-black">
                     Email
                   </label>
                   <Input
@@ -105,10 +105,11 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium">
+                  <label htmlFor="password" className="text-sm font-medium text-black">
                     Senha
                   </label>
                   <Input
@@ -118,6 +119,7 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
@@ -136,7 +138,7 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="signup-email" className="text-sm font-medium">
+                  <label htmlFor="signup-email" className="text-sm font-medium text-black">
                     Email
                   </label>
                   <Input
@@ -146,10 +148,11 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="signup-password" className="text-sm font-medium">
+                  <label htmlFor="signup-password" className="text-sm font-medium text-black">
                     Senha
                   </label>
                   <Input
@@ -160,6 +163,7 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
