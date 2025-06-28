@@ -118,10 +118,11 @@ Retorne APENAS um JSON válido no formato:
 
   static async analyzeContract(contractText: string, modelType: string): Promise<AnalysisResult> {
     try {
+      console.log('Iniciando análise com IA...');
       const openai = await this.getOpenAIClient();
       
       const response = await openai.chat.completions.create({
-        model: 'google/gemini-2.0-flash-exp',
+        model: 'anthropic/claude-3.5-sonnet',
         messages: [
           {
             role: 'system',
@@ -141,13 +142,17 @@ Retorne APENAS um JSON válido no formato:
         throw new Error('Resposta vazia da IA');
       }
 
+      console.log('Resposta da IA:', content);
+
       // Parse JSON da resposta
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error('Formato de resposta inválido');
+        throw new Error('Formato de resposta inválido da IA');
       }
 
       const result = JSON.parse(jsonMatch[0]) as AnalysisResult;
+      console.log('Resultado parseado:', result);
+      
       return result;
 
     } catch (error) {
@@ -155,7 +160,7 @@ Retorne APENAS um JSON válido no formato:
       if (error instanceof Error && error.message.includes('OPENROUTER_API_KEY')) {
         throw error; // Re-throw configuration errors
       }
-      throw new Error('Falha na análise do contrato');
+      throw new Error(`Falha na análise do contrato: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 }
